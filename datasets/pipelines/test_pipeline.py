@@ -15,6 +15,29 @@ class ReInDict:
 
 
 @TRANSFORMS.register_module()
+class Resize:
+    def __init__(self, size=(256, 256), interpolation='INTER_LINEAR', keys=['img'], cfg=None):
+        self.size = size
+        self.keys = keys
+        self.got_interpolation(interpolation)
+    
+    def got_interpolation(self, interpolation):
+        self.interpolation = getattr(cv2, interpolation.upper())
+        if self.interpolation is None:
+            raise ValueError(f'Interpolation mode {interpolation} is not supported.')
+
+    def __call__(self, sample):
+        for key in self.keys:
+            if not isinstance(sample[key], np.ndarray):
+                raise TypeError(f'sample -> key {key} should be a numpy array.')
+            sample[key] = cv2.resize(sample[key], self.size, interpolation=self.interpolation)
+        return sample
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(size={self.size}, interpolation={self.interpolation})'
+
+
+@TRANSFORMS.register_module()
 class ToTensor(object):
     """Convert some results to :obj:`torch.Tensor` by given keys.
 

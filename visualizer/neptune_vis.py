@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Union
 import numpy as np
 import torch
 import neptune.new as neptune

@@ -23,8 +23,8 @@ class ProxyDataset(BaseDataset):
         Returns:
             dict: Parent arguments.
         """
-        self.ann_list = [self.ann_file]  if 'ann_file' in args else []
-        args['data_prefix'] = args['data_prefix'] if 'data_prefix' in args else {}
+        args['ann_list'] = args.get('ann_list', [])
+        args['data_prefix'] = args.get('data_prefix', {})      
         return args
 
     # need complete the function on Subclass

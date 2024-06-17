@@ -7,23 +7,31 @@ import numpy as np
 from rich.progress import open, track, wrap_file
 import time
 import pickle
-
+import os
+import io # only for write file though rich open override orin and cant write
 from .proxy_dataset import ProxyDataset
 from utils.rich_utils import processInfo
 
 @DATASETS.register_module()
 class Cifar10Dataset(ProxyDataset):
 
-    def __init__(self, data_root='', ann_list:List=[], **kwargs):
-        super(Cifar10Dataset, self).__init__(data_root=data_root,ann_list=ann_list, **kwargs)
+    def __init__(self, data_root='', ann_list:List=[], download=False, **kwargs):
+        super(Cifar10Dataset, self).__init__(data_root=data_root, ann_list=ann_list, download=download, **kwargs)
 
     def _filterParentArgs(self, args):
         self.ann_list = args.pop('ann_list',[]) # change ann_file to ann_list for multi annotation file
         args['data_prefix'] = args['data_prefix'] if 'data_prefix' in args else {}
+
+        keys_to_remove = [key for key in args.keys() if key in ['download']]
+        for key in keys_to_remove:
+            setattr(self, key, args.pop(key))
         return args
 
     def _loadAnnotations(self) -> Dict:
         # cifar 10 classes
+
+        self._check_and_download_data()
+
         metainfo = dict(
             classes=['airplane', 'automobile', 'bird', 'cat', 
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck'],
@@ -53,6 +61,61 @@ class Cifar10Dataset(ProxyDataset):
             
         return dict(metainfo=metainfo, data_list=data_list)
 
+
+    def _check_and_download_data(self):
+        """
+        Check if CIFAR-10 data exists, and if not, download it.
+        """
+        if not self.download:
+            return
+        for ann_file in self.ann_list:
+            if not os.path.exists(osp.join(self.data_root, ann_file)):
+                print("CIFAR-10 dataset not found. Downloading...")
+                self._download_data()
+                break
+
+    def _download_data(self):
+        """
+        Download and extract the CIFAR-10 dataset.
+        """
+        CIFAR10_FILENAME = "cifar-10-python.tar.gz"
+        CIFAR10_URL = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+        os.makedirs(self.data_root, exist_ok=True)
+        tar_path = osp.join(self.data_root, CIFAR10_FILENAME)
+        import requests
+        import tarfile
+        # Download the dataset
+        # Remove existing incomplete file
+        if os.path.exists(tar_path):
+            os.remove(tar_path)
+        with requests.get(CIFAR10_URL, stream=True) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            with io.open(tar_path, 'wb') as f:
+                for chunk in track(
+                        r.iter_content(chunk_size=8192),
+                        description="Downloading CIFAR-10",
+                        total=total_size // 8192,
+                        show_speed=True):
+                    if chunk:  f.write(chunk)
+        
+        # Extract the tar file
+        print("Extracting CIFAR-10 dataset...")
+        with tarfile.open(tar_path, 'r:gz') as tar:
+            members = []
+            for member in tar.getmembers():
+                if member.name.startswith('cifar-10-batches-py/'):
+                    # 去掉目录名前缀
+                    member.name = member.name[len('cifar-10-batches-py/'):]
+                    # 提取文件到目标目录
+                    if member.name:  # 避免提取空的目录名
+                        members.append(member)
+
+            tar.extractall(self.data_root, members)
+
+        # Clean up the tar file
+        os.remove(tar_path)
+        print("CIFAR-10 dataset downloaded and extracted successfully.")
 
 if __name__ == "__main__":
 

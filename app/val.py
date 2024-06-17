@@ -11,7 +11,7 @@ from mmengine.hooks import LoggerHook
 
 # from logging.logger import MMLogger
 
-def val(config_path: str, batch_size=20, num_workers=2, work_dir='./logs/train_cifar10'):
+def val(config_path: str, batch_size=20, num_workers=2):
 
     
     all_cfg = Config(filename=config_path)
@@ -27,7 +27,7 @@ def val(config_path: str, batch_size=20, num_workers=2, work_dir='./logs/train_c
 
     # 初始化执行器
     runner = Runner(model,
-                    work_dir=work_dir,  # 工作目录，用于保存模型和日志
+                    work_dir=all_cfg.work_dir,  # 工作目录，用于保存模型和日志
                     visualizer=all_cfg.Visbackend,  # 可视化后端
                     train_cfg=all_cfg.train_cfg,  # 训练配置
                     train_dataloader=None,  # 训练数据加载器

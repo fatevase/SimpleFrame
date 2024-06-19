@@ -1,4 +1,6 @@
-from app.wandb_train import train
+# from app.wandb_train import train
+from app.train import train
+from app.val import val
 import wandb
 
 import random
@@ -19,3 +21,4 @@ def seed_everything(seed=42):
 if __name__ == "__main__":
     seed_everything()
     train('./configs/cifar10.py')
+    # val('./configs/cifar10.py', 'val', load_from='D:/Codes/Python/SimpleFrame/logs/train_cifar10/epoch_10.pth')

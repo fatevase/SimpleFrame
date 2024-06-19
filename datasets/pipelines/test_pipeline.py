@@ -12,7 +12,67 @@ class ReInDict:
             results[value] = results.pop(key)
         return results
 
+@TRANSFORMS.register_module()
+class RandomHorizontalFlip:
+    def __init__(self, p=0.5, keys=['img'], cfg=None):
+        self.p = p
+        self.keys = keys
 
+    def __call__(self, sample):
+        if np.random.rand() > self.p:
+            return sample
+        for key in self.keys:
+            sample[key] = cv2.flip(sample[key], 1)
+        return sample
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(p={self.p})'
+
+@TRANSFORMS.register_module()
+class RandomVerticalFlip:
+    def __init__(self, p=0.5, keys=['img'], cfg=None):
+        self.p = p
+        self.keys = keys
+
+    def __call__(self, sample):
+        if np.random.rand() > self.p:
+            return sample
+        for key in self.keys:
+            sample[key] = cv2.flip(sample[key], 0)
+        return sample
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(p={self.p})'
+
+@TRANSFORMS.register_module()
+class ColorJitter:
+    def __init__(self, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, keys=['img'], cfg=None):
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
+        self.keys = keys
+
+    def __call__(self, sample):
+        img = sample['img']
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+        img = img.astype(np.float32)
+        if np.random.rand() < self.brightness:
+            img[..., 2] *= np.random.uniform(0.8, 1.2)
+        if np.random.rand() < self.contrast:
+            img[..., 2] *= np.random.uniform(0.8, 1.2)
+        if np.random.rand() < self.saturation:
+            img[..., 1] *= np.random.uniform(0.8, 1.2)
+        if np.random.rand() < self.hue:
+            img[..., 0] += np.random.uniform(-0.1, 0.1)
+        img = np.clip(img, 0, 255)
+        img = img.astype(np.uint8)
+        img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+        sample['img'] = img
+        return sample
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(brightness={self.brightness}, contrast={self.contrast}, saturation={self.saturation}, hue={self.hue})'
 
 @TRANSFORMS.register_module()
 class Resize:

@@ -11,7 +11,7 @@ from mmengine.hooks import LoggerHook
 
 # from logging.logger import MMLogger
 
-def val(config_path: str, batch_size=20, num_workers=2):
+def val(config_path: str, data_type='val', load_from=None, batch_size=40, num_workers=2):
 
     
     all_cfg = Config(filename=config_path)
@@ -19,8 +19,12 @@ def val(config_path: str, batch_size=20, num_workers=2):
     model = mmengine.build_from_cfg(all_cfg.Net, MODELS)
 
     # 构建手写数字识别 (MNIST) 数据集
-    val_dataset = mmengine.build_from_cfg(all_cfg.VDataset, DATASETS)
-    val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)
+    if data_type == 'train':
+        val_dataset = mmengine.build_from_cfg(all_cfg.TDataset, DATASETS)
+        val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)
+    else:
+        val_dataset = mmengine.build_from_cfg(all_cfg.VDataset, DATASETS)
+        val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)
 
     # 构建评估器
     val_evaluator = Evaluator(all_cfg.Metric)
@@ -29,15 +33,12 @@ def val(config_path: str, batch_size=20, num_workers=2):
     runner = Runner(model,
                     work_dir=all_cfg.work_dir,  # 工作目录，用于保存模型和日志
                     visualizer=all_cfg.Visbackend,  # 可视化后端
-                    train_cfg=all_cfg.train_cfg,  # 训练配置
-                    train_dataloader=None,  # 训练数据加载器
                     val_dataloader=val_dataloader,  # 验证数据加载器
                     val_evaluator=val_evaluator,  # 验证评估器
                     val_cfg=dict(), # 验证配置
-                    # load_from='/Users/vase/Documents/Coding/Python/train_cifar10/epoch_3.pth',
-                    optim_wrapper=dict(optimizer=all_cfg.Optimizer), # 优化器
-                    custom_hooks=[dict(type='ModelVisHook')],
-                    param_scheduler=all_cfg.Scheduler) # 学习率调度器
+                    load_from=load_from, # 加载模型
+                    optim_wrapper=None, # 优化器
+                    custom_hooks=[dict(type='ModelVisHook')]) # 学习率调度器
     # 执行训练
     # runner.train()
     # LoggerHook.after_train_iter()

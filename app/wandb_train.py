@@ -6,11 +6,12 @@ from mmengine import MODELS, DATASETS
 from mmengine.evaluator import Evaluator
 from mmengine.runner import Runner
 import app
-
-def train(econfig, project_name='macbook', count=15):
+import time
+def train(econfig, project_name='macbook', count=35):
     # Initialize a new wandb run
     wconfig = {
-        'method': 'random',
+        "name": f"sweep-{time.time()}",
+        'method': 'bayes',
         'metric' : {
             'name': 'loss',
             'goal': 'minimize'   
@@ -23,11 +24,20 @@ def train(econfig, project_name='macbook', count=15):
                 # a flat distribution between 0 and 0.1
                 'distribution': 'uniform',
                 'min': 0,
-                'max': 1e-3
+                'max': 1e-2
             },
-            # 'activate': {
-            #     'values': ['relu', 'ftanh']
-            # },
+            'embad_type':{
+                'values': ['conv', 'embed']
+            },
+            'attention_in': {
+                'values': [64, 128, 256, 512]
+            },
+            'attention_times': {
+                'values': [1,2,3,4,5,6,7,8]
+            },
+            'multi_head': {
+                'values': [1,2,4,8]
+            },
             'batch_size': {
                 # integers between 10 and 25
                 # with evenly-distributed logarithms 
@@ -50,6 +60,12 @@ def train(econfig, project_name='macbook', count=15):
             all_cfg.Optimizer.lr = config.learning_rate
             all_cfg.train_cfg.max_epochs = config.epochs
             all_cfg.work_dir = './wandb_hp/train_cifar10'
+            
+            all_cfg.Net.embad_type = config.embad_type
+            all_cfg.Net.attention_in = config.attention_in
+            all_cfg.Net.attention_times = config.attention_times
+            all_cfg.Net.multi_head = config.multi_head
+            
             batch_size = config.batch_size
             app.train(config, batch_size, override_cfg=all_cfg)
             

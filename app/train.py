@@ -19,10 +19,9 @@ def train(config_path: str, batch_size=20, num_workers=2, override_cfg=None):
         all_cfg = Config(filename=config_path)
 
     model = mmengine.build_from_cfg(all_cfg.Net, MODELS)
+    print(model)
 
 
-
-    # 构建手写数字识别 (MNIST) 数据集
     train_dataset = mmengine.build_from_cfg(all_cfg.TDataset, DATASETS)
     val_dataset = mmengine.build_from_cfg(all_cfg.VDataset, DATASETS)
 
@@ -47,7 +46,7 @@ def train(config_path: str, batch_size=20, num_workers=2, override_cfg=None):
                     val_cfg=dict(), # 验证配置
                     # load_from='/Users/vase/Documents/Coding/Python/train_cifar10/epoch_3.pth',
                     optim_wrapper=dict(optimizer=all_cfg.Optimizer), # 优化器
-                    custom_hooks=[dict(type='ModelVisHook')],
+                    custom_hooks=[dict(type='ModelVisHook'), dict(type='TrainAccuracyHook')],
                     param_scheduler=all_cfg.Scheduler) # 学习率调度器
     # 执行训练
     runner.train()

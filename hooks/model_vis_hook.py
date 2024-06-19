@@ -16,8 +16,8 @@ class ModelVisHook(Hook):
                 self.input_hook_data[name] = input[0].detach() # input type is tulple, only has one element, which is the tensor
                 self.output_hook_data[name] = output.detach()  # output type is tensor
             return hook
-        self.loss_hook = model.loss.register_forward_hook(get_activation('loss_hook'))
-        self.pred_hook = model.cnn_decoder.register_forward_hook(get_activation('pred_hook'))
+        self.loss_hook = model.loss.register_forward_hook(get_activation('loss_hook')) 
+        self.pred_hook = model.cnn_decoder.register_forward_hook(get_activation('pred_hook')) # TODO: need change for another model
         self.input_hook_data = input_hook_data
         self.output_hook_data = output_hook_data
         self.epoch_loss = 0.0

@@ -3,7 +3,10 @@ Net=dict(
     type='Classifier',
     in_channels=3,
     classify=10,
-    activate='relu',
+    attention_in=512,
+    attention_times=5,
+    multi_head=8,
+    embad_type='conv',
 )
 
 
@@ -16,6 +19,7 @@ TDataset=dict(
     pipeline = [
         dict(type='ReInDict', img_label='target'),
         # dict(type='Resize', size=(224, 224)),
+        dict(type='RandomHorizontalFlip', p=0.5, keys=['img']),
         dict(type='Normalize',img_norm=dict(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010])),
         dict(type='ToTensor'),
         dict(type='ReOutDict', img='input'),
@@ -36,12 +40,12 @@ VDataset=dict(
     ],
 )
 Optimizer=dict(
-    # type='SGD',
-    # lr=0.03,
+    type='SGD',
+    lr=1e-3,
     # momentum=0.9,
-    type='AdamW',
-    lr=3e-4,
-    weight_decay=0.01,
+    # type='AdamW',
+    # lr=3e-4,
+    # weight_decay=0.01,
 )
 Scheduler=[
     dict(type='LinearLR',
@@ -73,7 +77,7 @@ Visbackend=dict(
         )
     )]
 )
-train_cfg=dict(by_epoch=True, max_epochs=1, val_interval=1)
+train_cfg=dict(by_epoch=True, max_epochs=30, val_interval=1)
 custom_imports=dict(imports=['models', 'datasets', 'utils', 'app', 'hooks'], allow_failed_imports=False)
 
 batch_size=20

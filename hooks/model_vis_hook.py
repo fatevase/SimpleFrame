@@ -46,7 +46,10 @@ class ModelVisHook(Hook):
     
     def after_val_iter(self, runner, batch_idx: int,
                         data_batch = None, outputs = None) -> None:
-        if batch_idx == self.random_batch:
+        
+        if getattr(self, 'random_batch', None) is None:
+            return
+        elif batch_idx == self.random_batch:
             # preds = self.output_hook_data['pred_hook'].argmax(dim=1)
             preds = outputs
             data_meta = runner.visualizer.dataset_meta

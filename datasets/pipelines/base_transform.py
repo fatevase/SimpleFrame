@@ -4,11 +4,12 @@ from abc import ABC, abstractmethod
 from utils import ConsoleLogger
 """
 import abc
+import random
 
 class BaseTransform(abc.ABC):
     """BaseTrasnform class"""
 
-    def __init__(self):
+    def __init__(self, p):
         super().__init__()
         self.logger = None
 

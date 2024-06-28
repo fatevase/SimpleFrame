@@ -46,25 +46,26 @@ class RandomVerticalFlip:
 
 @TRANSFORMS.register_module()
 class ColorJitter:
-    def __init__(self, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, keys=['img'], cfg=None):
+    def __init__(self, p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, keys=['img'], cfg=None):
         self.brightness = brightness
         self.contrast = contrast
         self.saturation = saturation
         self.hue = hue
         self.keys = keys
+        self.p = p
 
     def __call__(self, sample):
         img = sample['img']
         img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
         img = img.astype(np.float32)
-        if np.random.rand() < self.brightness:
-            img[..., 2] *= np.random.uniform(0.8, 1.2)
-        if np.random.rand() < self.contrast:
-            img[..., 2] *= np.random.uniform(0.8, 1.2)
-        if np.random.rand() < self.saturation:
-            img[..., 1] *= np.random.uniform(0.8, 1.2)
-        if np.random.rand() < self.hue:
-            img[..., 0] += np.random.uniform(-0.1, 0.1)
+        if np.random.rand() < self.p:
+            img[..., 2] *= np.random.uniform(0.7+self.brightness, 1+self.brightness)
+        if np.random.rand() < self.p:
+            img[..., 2] *= np.random.uniform(0.7+self.contrast, 1+self.contrast)
+        if np.random.rand() < self.p:
+            img[..., 1] *= np.random.uniform(0.7+self.saturation, 1+self.saturation)
+        if np.random.rand() < self.p:
+            img[..., 0] += np.random.uniform(-self.hue, self.hue)
         img = np.clip(img, 0, 255)
         img = img.astype(np.uint8)
         img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)

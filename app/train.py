@@ -11,7 +11,7 @@ from mmengine.hooks import LoggerHook
 
 # from logging.logger import MMLogger
 
-def train(config_path: str, batch_size=20, num_workers=2, override_cfg=None):
+def train(config_path: str, num_workers=2, override_cfg=None):
 
     if override_cfg:
         all_cfg = override_cfg
@@ -29,8 +29,8 @@ def train(config_path: str, batch_size=20, num_workers=2, override_cfg=None):
     # train_dataset = train_dataset.get_subset(0, int(len(train_dataset) *0.7))
 
     # 构建数据加载器
-    train_dataloader = DataLoader(dataset=train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
-    val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=all_cfg.batch_size, num_workers=num_workers, shuffle=True)
+    val_dataloader = DataLoader(dataset=val_dataset, batch_size=all_cfg.batch_size, num_workers=num_workers)
 
     # 构建评估器
     val_evaluator = Evaluator(all_cfg.Metric)
@@ -46,7 +46,7 @@ def train(config_path: str, batch_size=20, num_workers=2, override_cfg=None):
                     val_cfg=dict(), # 验证配置
                     # load_from='/Users/vase/Documents/Coding/Python/train_cifar10/epoch_3.pth',
                     optim_wrapper=dict(optimizer=all_cfg.Optimizer), # 优化器
-                    custom_hooks=[dict(type='ModelVisHook'), dict(type='TrainAccuracyHook')],
+                    custom_hooks=[dict(type='ModelVisHook')],#, dict(type='TrainAccuracyHook')],
                     param_scheduler=all_cfg.Scheduler) # 学习率调度器
     # 执行训练
     runner.train()

@@ -7,7 +7,7 @@ from mmengine.evaluator import Evaluator
 from mmengine.runner import Runner
 import app
 import time
-def train(econfig, project_name='macbook', count=35):
+def train(econfig, project_name='macbook', count=200):
     # Initialize a new wandb run
     wconfig = {
         "name": f"sweep-{time.time()}",
@@ -29,25 +29,29 @@ def train(econfig, project_name='macbook', count=35):
             'embad_type':{
                 'values': ['conv', 'embed']
             },
+            'attention_shape': {
+                'values': [
+                    (2, 2), (4, 4), (16, 16), (32, 32)]
+            },
             'attention_in': {
-                'values': [64, 128, 256, 512]
+                'values': [64, 128, 256]
             },
             'attention_times': {
-                'values': [1,2,3,4,5,6,7,8]
+                'values': [1,2,3,4]
             },
             'multi_head': {
-                'values': [1,2,4,8]
+                'values': [1,2,4]
             },
-            'batch_size': {
-                # integers between 10 and 25
-                # with evenly-distributed logarithms 
-                'distribution': 'q_log_uniform_values',
-                'q': 8,
-                'min': 10,
-                'max': 25,
-            },
+            # 'batch_size': {
+            #     # integers between 10 and 25
+            #     # with evenly-distributed logarithms 
+            #     'distribution': 'q_log_uniform_values',
+            #     'q': 8,
+            #     'min': 10,
+            #     'max': 25,
+            # },
             'epochs': {
-                'value': 1
+                'value': 3
             },
         },
     }
@@ -66,8 +70,8 @@ def train(econfig, project_name='macbook', count=35):
             all_cfg.Net.attention_times = config.attention_times
             all_cfg.Net.multi_head = config.multi_head
             
-            batch_size = config.batch_size
-            app.train(config, batch_size, override_cfg=all_cfg)
+            # batch_size = config.batch_size
+            app.train("", override_cfg=all_cfg)
             
 
     wandb.login()

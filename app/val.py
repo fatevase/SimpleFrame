@@ -18,7 +18,7 @@ def val(config_path: str, data_type='val', load_from=None, batch_size=40, num_wo
 
     model = mmengine.build_from_cfg(all_cfg.Net, MODELS)
 
-    # 构建手写数字识别 (MNIST) 数据集
+    # 构建数据集
     if data_type == 'train':
         val_dataset = mmengine.build_from_cfg(all_cfg.TDataset, DATASETS)
         val_dataloader = DataLoader(dataset=val_dataset, batch_size=batch_size, num_workers=num_workers)

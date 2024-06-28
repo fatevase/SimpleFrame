@@ -2,7 +2,7 @@
 Net=dict(
     type='Classifier',
     in_channels=3,
-    classify=10,
+    classify=100,
     in_shape=(32, 32),
     attn_shape=(16, 16),
     attention_in=64,
@@ -14,10 +14,10 @@ Net=dict(
 
 TDataset=dict(
     type='Cifar10Dataset',
-    data_root='D:/datasets/cifar10',
+    data_root='D:/datasets/cifar100',
     test_mode=False,
     data_prefix=dict(),
-    ann_list=['data_batch_1', 'data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5'],
+    ann_list=['train'],
     pipeline = [
         dict(type='ReInDict', img_label='target'),
         # dict(type='Resize', size=(224, 224)),
@@ -32,10 +32,10 @@ TDataset=dict(
 )
 VDataset=dict(
     type='Cifar10Dataset',
-    data_root='D:/datasets/cifar10',
+    data_root='D:/datasets/cifar100',
     test_mode=True,
     data_prefix=dict(),
-    ann_list=['test_batch'],
+    ann_list=['test'],
     pipeline = [
         dict(type='ReInDict', img_label='target'),
         dict(type='Normalize',img_norm=dict(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010])),
@@ -47,10 +47,9 @@ Optimizer=dict(
     # type='SGD',
     # lr=1e-2,
     # momentum=0.9,
-    # weight_decay=1e-4,
     type='AdamW',
     lr=1e-2,
-    weight_decay=1e-4,
+    weight_decay=0.01,
 )
 Scheduler=[
     dict(type='LinearLR',
@@ -58,15 +57,15 @@ Scheduler=[
          by_epoch=True,
          convert_to_iter_based=True,
          begin=0,
-         end=10
+         end=5
     ),
-
+    # 在 [100, 900) 迭代时使用余弦学习率
     dict(type='CosineAnnealingLR',
-         T_max=510,
+         T_max=198,
          by_epoch=True,
          convert_to_iter_based=True,
-         begin=10,
-         end=500
+         begin=5,
+         end=200
     ),
 ]
 
@@ -84,8 +83,8 @@ Visbackend=dict(
         )
     )]
 )
-train_cfg=dict(by_epoch=True, max_epochs=500, val_interval=5)
+train_cfg=dict(by_epoch=True, max_epochs=200, val_interval=4)
 custom_imports=dict(imports=['models', 'datasets', 'utils', 'app', 'hooks'], allow_failed_imports=False)
 
-batch_size=200
+batch_size=100
 work_dir='./logs/train_cifar10'

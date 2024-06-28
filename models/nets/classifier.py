@@ -31,23 +31,31 @@ class FTanh(nn.Module):
 
 @MODELS.register_module()
 class Classifier(BaseModel):
-    def __init__(self, in_channels=1, classify=2, attention_in=64, attention_times=1, multi_head=3, embad_type='conv', loss='cross_entropy'):
+    def __init__(self, in_channels=1, classify=2, in_shape=(32, 32), attn_shape=(8, 8), attention_in=64, attention_times=1, multi_head=3, embad_type='conv', loss='cross_entropy'):
         super().__init__()
         
 
         
-        self.cnn_trans = CNNTransformer(3, (32, 32), attention_in, (8, 8), 0, multi_head, attention_times, embad_type=embad_type)
+        self.cnn_trans = CNNTransformer(3, in_shape, attention_in, attn_shape, 0, multi_head, attention_times, embad_type=embad_type)
 
         # self.cnn_trans = nn.Sequential(
         #     nn.Conv2d(3, 64, 3, 2, 1),
         #     nn.Conv2d(64, attention_in, 3, 2, 1),
         # )
-        
+        linear_f = 64
+        for i in attn_shape:
+            linear_f *= (i//2)
         self.tran_decoder = nn.Sequential(
+            #  nn.Conv2d(3, 128, 3, 2, 1),
+            # nn.Conv2d(128, 256, 3, 2, 1),
+            # nn.BatchNorm2d(256),
+            # nn.GELU(),
+            # nn.Conv2d(256, 256, 3, 2, 1),
             nn.Conv2d(attention_in, 64, 3, 2, 1),
             nn.BatchNorm2d(64),
             nn.Flatten(),
-            nn.Linear(64*16, classify)
+            nn.Dropout(0.3),
+            nn.Linear(linear_f, classify)
         )
         
         self.cnn_encoder = nn.Sequential(
@@ -77,7 +85,8 @@ class Classifier(BaseModel):
         self.loss = nn.CrossEntropyLoss() if loss == 'cross_entropy' else nn.MSELoss()
 
 
-    def forward(self, input: torch.Tensor, data_samples: Dict = dict(), mode: str = 'tensor'):
+    def forward(self, input: torch.Tensor, data_samples: Dict = dict(), mode: str = 'predict'):
+        assert mode in ['loss', 'predict'], 'mode not in [loss, predict]'
         
         x = self.cnn_trans(input)
         x = self.tran_decoder(x)
@@ -90,8 +99,6 @@ class Classifier(BaseModel):
 
 
         if mode == 'loss':
-            return {'loss': self.loss(x, data_samples['target'])}
-        elif mode == 'predict':
-            return x.argmax(1)
+            return {'loss': self.loss(x, data_samples['target'])}#, 'pred': x}
         else:
-            return 
+            return x.argmax(1), self.loss(x.detach(), data_samples['target'].detach())

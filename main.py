@@ -1,4 +1,5 @@
 # from app.wandb_train import train
+import argparse
 from app.train import train
 from app.val import val
 import wandb
@@ -19,6 +20,15 @@ def seed_everything(seed=42):
 
 
 if __name__ == "__main__":
+    args = argparse.ArgumentParser()
+    args.add_argument('--train', action='store_true')
+    args.add_argument('--val', action='store_true')
+    args.add_argument('--load_from', type=str, default='')
+    args.add_argument('--data_type', type=str, default='val')
+    args = args.parse_args()
+    
     seed_everything()
-    train('./configs/cifar10.py')
-    # val('./configs/cifar10.py', 'val', load_from='D:/Codes/Python/SimpleFrame/logs/train_cifar10/epoch_10.pth')
+    if args.train:
+        train('./configs/cifar10.py')
+    if args.val and args.load_from != '':
+        val('./configs/cifar10.py', data_type=args.data_type, load_from=args.load_from)

@@ -17,7 +17,6 @@ class ModelVisHook(Hook):
                 self.output_hook_data[name] = output.detach()  # output type is tensor
             return hook
         self.loss_hook = model.loss.register_forward_hook(get_activation('loss_hook')) 
-        self.pred_hook = model.cnn_decoder.register_forward_hook(get_activation('pred_hook')) # TODO: need change for another model
         self.input_hook_data = input_hook_data
         self.output_hook_data = output_hook_data
         self.epoch_loss = 0.0
@@ -42,7 +41,7 @@ class ModelVisHook(Hook):
 
     def before_val_epoch(self, runner) -> None:
         epoch_iters = len(runner.val_dataloader) // runner.val_dataloader.batch_size
-        self.random_batch = np.random.choice(range(epoch_iters))
+        self.random_batch = np.random.choice(range(epoch_iters+1)) # +1 for avoid 0
     
     def after_val_iter(self, runner, batch_idx: int,
                         data_batch = None, outputs = None) -> None:
@@ -51,7 +50,8 @@ class ModelVisHook(Hook):
             return
         elif batch_idx == self.random_batch:
             # preds = self.output_hook_data['pred_hook'].argmax(dim=1)
-            preds = outputs
+            preds, _ = outputs # TODO: temp to fixed val have loss
+            
             data_meta = runner.visualizer.dataset_meta
             self.visual(data_batch, preds, data_meta, self.val_visual_step)
             # self.visualTable(data_batch, preds, data_meta, self.val_visual_step)
@@ -90,6 +90,7 @@ class ModelVisHook(Hook):
         wandb.log({f"Pred-Result": visual_list})
 
     def pred2caption(self, data_meta, pred, gt):
+        
         caption = f"GT-{gt} | Pred-{[pred]}"
         if not data_meta or 'classes' not in data_meta:
             return caption

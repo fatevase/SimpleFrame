@@ -8,7 +8,21 @@ from matplotlib import pyplot as plt
 @METRICS.register_module()
 class ClassifyAccuracy(BaseMetric):
     def process(self, data, preds) -> None:
-        self.results.append(((data['data_samples']['target'] == torch.Tensor(preds)).sum(), len(preds)))
+        targets = data['data_samples']['target']
+        preds, loss = preds
+
+        cls_num = len(self.dataset_meta['classes'])
+        if self.results is None or len(self.results) == 0:
+            # self.results = dict(corrects=[0]*cls_num, totals=[0]*cls_num, loss=0, iter=0)
+            self.results = [[0]*cls_num, [0]*cls_num, 0, 0]
+        for i in range(len(preds)):
+            if preds[i] == targets[i]:
+                self.results[0][preds[i]] += 1
+            self.results[1][preds[i]] += 1
+        self.results[2] += loss
+        self.results[3] += 1
+        
+        # self.results.append(((data['data_samples']['target'] == torch.Tensor(preds)).sum(), len(preds)))
         # # 可视化
         # if not getattr(self, 'visual_status', False):
         #     if random.random() > 0.8:
@@ -16,10 +30,13 @@ class ClassifyAccuracy(BaseMetric):
         #         self.visual_status = True
 
     def compute_metrics(self, results):
-        correct, all_iters = zip(*results)
-        acc = sum(correct) / sum(all_iters)
-
-        return dict(accuracy=acc)
+        corrects, totals, loss, iter = results
+        acc = [0]*len(corrects)
+        for i in range(len(corrects)):
+            acc[i] = round(corrects[i] / totals[i], 3)
+        macc = sum(acc) / len(acc)
+ 
+        return dict(accuracy=macc, class_accuracy=acc, val_loss=loss/iter)
 
     def visual(self, data, preds):
             
